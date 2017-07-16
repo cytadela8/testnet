@@ -34,7 +34,7 @@ init(ok) ->
     io:fwrite("top init 00\n"),
     GenesisMakerBlock = block:genesis_maker(),
     GHeader = block:block_to_header_new(GenesisMakerBlock),
-    GBH = block:hash(block:block(GenesisMakerBlock)),
+    GBH = block:hash(GenesisMakerBlock),
     ok = block_absorber:save_helper(GenesisMakerBlock),
     spawn(fun() ->
 		  gen_server:call(headers, {add, testnet_hasher:doit(GHeader),

@@ -207,7 +207,7 @@ proof_packer(X) -> X.
  
     %Proof2 = list_to_tuple([proof|tuple_to_list(Proof)]),
 many_headers(M, _) when M < 1 -> [];
-many_headers(Many, N) ->    
+many_headers(Many, N) ->    %TODO: make this efficient
     [block:block_to_header(block:read_int(N))|
      many_headers(Many-1, N+1)].
     

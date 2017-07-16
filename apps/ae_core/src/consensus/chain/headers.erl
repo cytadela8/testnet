@@ -191,7 +191,7 @@ absorb([A|T]) ->
     end,
     absorb(T).
 accumulate_diff(Diff, PrevHeader) ->
-    GH = serialize(block:block_to_header_new(block:read_int(0))),
+    GH = block:block_to_header_new(block:read_int(0)),
     io:fwrite(packer:pack({accumulate_diff, PrevHeader, GH})),
     if
 	PrevHeader == GH -> 0;

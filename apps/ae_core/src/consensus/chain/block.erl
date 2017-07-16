@@ -102,7 +102,7 @@ prev_hash(X) ->
     B = block(X),
     B#block.prev_hash.
 hash(BP) -> 
-    testnet_hasher:doit(block_to_header_new(BP)).
+    testnet_hasher:doit(block_to_header(BP)).
 time_now() ->
     (os:system_time() div (1000000 * constants:time_units())) - constants:start_time().
 genesis_maker() ->
@@ -208,11 +208,12 @@ next_acc(Parent, ND) ->
     %We need to reward the miner the sum of transaction fees.
 mine(BP, Times) when is_record(BP, block_plus) ->
     Block = BP#block_plus.block,
-    case mine2(Block, Times) of
+    case mine2(BP, Times) of
 	false -> false;
 	Pow -> BP#block_plus{pow = Pow}
     end.
-mine2(Block, Times) ->
+mine2(BP, Times) ->
+    Block = block(BP),
     PH = Block#block.prev_hash,
     ParentPlus = read(PH),
     Trees = ParentPlus#block_plus.trees,
@@ -220,7 +221,7 @@ mine2(Block, Times) ->
     Governance = trees:governance(Trees),
     BlockReward = governance:get_value(block_reward, Governance),
     MineDiff = (Difficulty * BlockReward) div constants:initial_block_reward(),
-    Pow = pow:pow(hash(Block), MineDiff, Times, constants:hash_size()),
+    Pow = pow:pow(hash(BP), MineDiff, Times, constants:hash_size()),
     Pow.
 next_difficulty(ParentPlus) ->
     Trees = ParentPlus#block_plus.trees,
