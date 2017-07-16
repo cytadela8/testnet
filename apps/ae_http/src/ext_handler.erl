@@ -35,7 +35,12 @@ doit({give_block, SignedBlock}) ->
     %true = block:height(SignedBlock) < api:height() + 2,
     io:fwrite("received block\n"),
     block_absorber:enqueue(SignedBlock),
-    {ok, 0};
+    case block_hashes:check(block:hash(SignedBlock)) of
+        true ->
+            {ok, known};
+        _ ->
+            {ok, unknown}
+    end;
 doit({block, N, Many}) -> 
     {ok, block:read_many(N, Many)};
 doit({block, N}) -> 
