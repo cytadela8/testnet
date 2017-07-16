@@ -1,4 +1,3 @@
-
 -module(block_absorber).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,
