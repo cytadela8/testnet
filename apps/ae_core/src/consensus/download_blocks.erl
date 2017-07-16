@@ -8,59 +8,103 @@
 sync_all([], _) -> ok;
 sync_all([Peer|T], Height) ->
     spawn(fun() ->
-		  sync(Peer, Height)
-	  end),
+                  sync(Peer, Height)
+          end),
     sync_all(T, Height).
 
 sync(Peer, MyHeight) ->
-    RemoteTop = remote_peer({top}, Peer),
-	do_sync(RemoteTop, MyHeight, Peer).
-
-do_sync(error, _, _) ->
-    ok;
-do_sync({ok, TopBlock, Height} = _RemoteTopResult, MyHeight, Peer) ->
-    {ok, DBB} = application:get_env(ae_core, download_blocks_batch),
-    JumpHeight = MyHeight + DBB,
-    if
-        JumpHeight < Height ->
-            io:fwrite("JumpHeight < Height\n"),
-            BlockAtJumpHeight = remote_peer({block, JumpHeight}, Peer),
-            trade_blocks(Peer, [BlockAtJumpHeight], JumpHeight);
-        true ->
-            trade_blocks(Peer, [TopBlock], Height)
-    end,
-    get_txs(Peer),
-    trade_peers(Peer).
-
-trade_blocks(Peer, L, 1) ->
-    block_absorber:enqueue(L),
-    Genesis = block:read_int(0),
-    GH = block:hash(Genesis),
-    send_blocks(Peer, top:doit(), GH, [], 0);
-trade_blocks(Peer, [PrevBlock|PBT] = CurrentBlocks, Height) ->
-    PrevHash = block:hash(PrevBlock),
-    {PrevHash, NextHash} = block:check1(PrevBlock),
-	OurChainAtPrevHash = block:read(PrevHash),
-	case OurChainAtPrevHash of
-        empty ->
-            RemoteBlockThatWeMiss = remote_peer({block, Height-1}, Peer),
-            NextHash = block:hash(RemoteBlockThatWeMiss),
-            trade_blocks(Peer, [RemoteBlockThatWeMiss|CurrentBlocks], Height-1);
-        _ ->
-            block_absorber:enqueue(PBT),
-            send_blocks(Peer, top:doit(), PrevHash, [], 0)
+    %lower their ranking
+    %peers:update_score(Peer, peers:initial_score()),
+    io:fwrite("top of sync\n"),
+    %S = erlang:timestamp(),
+    TopResp = talker:talk({top}, Peer),
+    case TopResp of
+        {error, failed_connect} -> 
+            io:fwrite("failed connect"),
+            ok;
+        {ok, TopBlock, Height}  ->
+            %io:fwrite("got topblock\n"),
+            {ok, DBB} = application:get_env(ae_core, download_blocks_batch),
+	    HH = MyHeight + DBB,
+	    if
+                HH < Height ->
+		    %io:fwrite("HH < Height\n"),
+                    {ok, Sizecap} = application:get_env(ae_core, download_blocks_sizecap),
+                    {ok, Blocks} = talker:talk({block_sizecap, HH, Sizecap}, Peer),
+                    trade_blocks(Peer, Blocks);
+                true ->
+                    trade_blocks(Peer, [TopBlock]),
+                    get_txs(Peer)
+            end,
+	    trade_peers(Peer);
+            X -> io:fwrite(X)
     end.
 
-send_blocks(Peer, Hash, Hash, Blocks, _N) ->
-    send_blocks_external(Peer, Blocks);
-send_blocks(Peer, OurTopHash, CommonHash, Blocks, N) ->
-    GH = block:hash(block:read_int(0)),
-    if
-        OurTopHash == GH -> send_blocks_external(Peer, Blocks);
-        true ->
-            BlockPlus = block:read(OurTopHash),
-            PrevHash = block:prev_hash(BlockPlus),
-            send_blocks(Peer, PrevHash, CommonHash, [BlockPlus|Blocks], N+1)
+trade_blocks(Peer, [PrevBlock|PBT]) ->
+    %io:fwrite("trade blocks"),
+    %"nextBlock" is from earlier in the chain than prevblock. we are walking backwards
+    case block:height(PrevBlock) of 
+        1 ->  %if PrevBlock is block 1 we stop
+            send_blocks(Peer, top:doit(), block:genesis_hash(), [], 0),
+            block_absorber:enqueue([PrevBlock|PBT]);
+        _ ->
+            PrevHash = block:hash(PrevBlock),
+            %{ok, PowBlock} = talker:talk({block, Height}, Peer),
+            {PrevHash, NextHash} = block:check1(PrevBlock),
+            M = block:read(PrevHash),%check if it is in our memory already.
+            case M of
+	        empty -> 
+                    {ok, Sizecap} = application:get_env(ae_core, download_blocks_sizecap),
+                    {ok, NextBatch} = talker:talk({block_sizecap, NextHash, Sizecap}, Peer),
+	    	    %Heighest first, lowest last. We need to reverse
+		    trade_blocks(Peer, lists:append(lists:reverse(NextBatch),[PrevBlock|PBT]));
+	        _ -> 
+                    LastCommonHash = block:hash(last_known_block([PrevBlock|PBT])),
+                    %We send blocks before absorbing to make sure we don't send any downloaded blocks
+                    send_blocks(Peer, top:doit(), LastCommonHash, [], block:height(M)),
+                    NewBlocks = remove_known_blocks(PBT),
+	            block_absorber:enqueue(NewBlocks)
+            end
+    end.
+
+remove_known_blocks([]) ->
+    [];
+remove_known_blocks([PrevBlock | PBT]) ->
+    PrevHash = block:hash(PrevBlock),
+    M = block:read(PrevHash),
+    case M of 
+        empty ->
+            [PrevBlock | PBT];
+        _ ->
+            remove_known_blocks(PBT)
+    end.
+
+last_known_block([Block]) ->
+    Block;
+last_known_block([First | [Second | Other]]) ->
+    SecondHash = block:hash(Second),
+    M = block:read(SecondHash),
+    case M of
+        empty ->
+            First;
+        _ ->
+            last_known_block([Second | Other])
+    end.
+
+send_blocks(Peer, T, T, L, _) -> 
+    send_blocks_external(Peer, L);
+send_blocks(Peer, 0, _, L, _) ->
+    send_blocks_external(Peer, L);
+send_blocks(Peer, TopHash, CommonHash, L, CommonHeight) ->
+    BlockPlus = block:read(TopHash),
+    PrevHash = block:prev_hash(BlockPlus),
+    case block:height(BlockPlus) of
+        CommonHeight -> %if we realize, we are on diffrent fork then the peer
+            BlockCommon = block:read(CommonHash),
+            NewCommon = block:prev_hash(BlockCommon),
+            send_blocks(Peer, PrevHash, NewCommon, [BlockPlus|L], block:height(BlockCommon)-1); %we send one more block till we find one common with our main chain and the fork
+        _ ->
+            send_blocks(Peer, PrevHash, CommonHash, [BlockPlus|L], CommonHeight)
     end.
 
 send_blocks_external(Peer, Blocks) ->

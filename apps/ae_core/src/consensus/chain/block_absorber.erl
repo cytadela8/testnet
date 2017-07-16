@@ -1,4 +1,3 @@
-
 -module(block_absorber).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,
@@ -47,7 +46,7 @@ save(InputBlock) ->
 
     
 absorb(BP) ->
-    %BH = block:hash(BP),
+    true = block:height(BP) < easy:height() + 2,  %simple check
     BH = block:hash(BP),
     {BH, NextBlock} = block:check1(BP),
     case block_hashes:check(BH) of

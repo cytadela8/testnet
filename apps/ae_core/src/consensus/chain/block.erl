@@ -1,4 +1,3 @@
-
 -module(block).
 -export([hash/1,check2/1,test/0,mine_test/0,
 	 make/3,mine/2,height/1,
@@ -9,7 +8,7 @@
 	 median_last/2, trees/1, trees_hash/1,
 	 guess_number_of_cpu_cores/0, difficulty/1,
 	 txs/1, genesis_maker/0, new_id/1, read_many/2,
-	 block_to_header_new/1
+	 block_to_header_new/1, read_many_sizecap/2
 	]).
 
 -record(block, {height, prev_hash, txs, trees, 
@@ -61,7 +60,6 @@ block_to_header(B) ->
       Miner/binary,
       Trees/binary,
       TxHash/binary>>.
-    
       
 hashes(BP) ->
     BP#block_plus.prev_hashes.
@@ -399,6 +397,28 @@ read_many2(H, M) ->
 	    PH = prev_hash(X),
 	    [read(H)|read_many2(PH, M-1)]
     end.
+
+get_block(Block) when is_integer(Block) ->
+    read_int(Block);
+get_block(Block) -> %if it's not an integer then it's hash
+    read(Block).
+
+read_many_sizecap(Cur, Cap) ->
+    X = get_block(Cur),
+    read_many_sizecap_internal(X, Cap).
+
+read_many_sizecap_internal(empty, _) ->
+    [];
+read_many_sizecap_internal(X, Cap) ->
+    Xsize = iolist_size(packer:pack(X)) + 1, %+1 for the delimeter char (,)
+    if
+        Xsize > Cap ->
+            [];
+        true ->
+            PH = prev_hash(X),
+            [X | read_many_sizecap(PH, Cap - Xsize)] 
+end.
+
 read_int(N) ->%currently O(n), needs to be improved to O(lg(n))
     true = N >= 0,
     read_int(N,top:doit()).

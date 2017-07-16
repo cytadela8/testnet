@@ -31,13 +31,15 @@ doit({pubkey}) -> {ok, keys:pubkey()};
 %doit({height}) -> {ok, block_tree:height()};
 %doit({total_coins}) -> {ok, block_tree:total_coins()};
 doit({give_block, SignedBlock}) -> 
-    %true = block:height(SignedBlock) < api:height() + 2,
+    %true = block:height(SignedBlock) < api:height() + 2, %removed becouse we may get blocks faster then we can process them
     block_absorber:enqueue(SignedBlock),
     {ok, 0};
 doit({block, N, Many}) -> 
     {ok, block:read_many(N, Many)};
 doit({block, N}) -> 
     {ok, block:read_int(N)};
+doit({block_sizecap, N, Cap}) ->
+    {ok, block:read_many_sizecap(N, Cap - 10)};  %-10 for some begining and end addictional characters
 doit({header, N}) -> 
     {ok, block:block_to_header(block:read_int(N))};
 doit({headers, Many, N}) -> 
