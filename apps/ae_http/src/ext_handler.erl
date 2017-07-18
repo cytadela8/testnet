@@ -35,8 +35,13 @@ doit({give_block, SerializedSignedBlock}) ->
     %true = block:height(SignedBlock) < api:height() + 2,
     lager:info("received block"),
     SignedBlock = block:deserialize(SerializedSignedBlock),
-    block_absorber:enqueue(SignedBlock),
-    {ok, 0};
+    case block_hashes:check(block:hash(SignedBlock)) of
+        true ->
+            {ok, "known"};
+        _ ->
+            block_absorber:enqueue_and_push(SignedBlock),
+            {ok, "unknown"}
+    end;
 doit({block, N}) when is_integer(N), N >= 0 ->
     lager:info("received request for block ~p", [N]),
     {ok, block:serialize(block:get_by_height(N))};

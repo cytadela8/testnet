@@ -3,6 +3,7 @@
 
 %% API
 -export([enqueue/1, %% async request
+         enqueue_and_push/1,
          save/1,    %% returns after saving
          do_save/1,
          garbage/0]).
@@ -22,6 +23,10 @@ enqueue(InputBlocks) when is_list(InputBlocks) ->
 enqueue(InputBlock) ->
     headers:absorb([block:block_to_header(InputBlock)]),
     gen_server:cast(?MODULE, {doit, InputBlock}).
+
+enqueue_and_push(InputBlock) ->
+    headers:absorb([block:block_to_header(InputBlock)]),
+    gen_server:cast(?MODULE, {doit_and_push, InputBlock}).
 
 save(InputBlocks) when is_list(InputBlocks) ->
     [save(InputBlock) || InputBlock <- InputBlocks];
@@ -57,7 +62,11 @@ handle_cast(garbage, State) ->
     {noreply, State};
 handle_cast({doit, BP}, State) ->
     ok = absorb_internal(BP),
-    {noreply, State}.
+    {noreply, State};
+handle_cast({doit_and_push, BP}, X) ->
+    absorb_internal(BP),
+    push_block:push_start(BP),
+    {noreply, X}.
 
 handle_info(_Info, State) ->
     {noreply, State}.
