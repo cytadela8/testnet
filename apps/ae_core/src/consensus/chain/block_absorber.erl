@@ -6,6 +6,7 @@
 %% API
 -export([
 	 enqueue/1, %% async request
+         enqueue_and_push/1,
 	 save/1,    %% returs after saving
 	 garbage/0,
 	 do_save/1
@@ -22,6 +23,13 @@ handle_cast(garbage, X) ->
     {noreply, X};
 handle_cast({doit, BP}, X) ->
     absorb_internal(BP),
+    {noreply, X};
+handle_cast({doit_and_push, BP}, X) ->
+    case absorb_internal(BP) of
+        ok -> ok;
+        _ ->
+            push_block:push_start(BP)
+    end,
     {noreply, X}.
 handle_call({doit, BP}, _From, X) -> 
     absorb_internal(BP),
@@ -36,6 +44,9 @@ enqueue(InputBlock) ->
     headers:absorb([block:block_to_header(InputBlock)]),
     gen_server:cast(?MODULE, {doit, InputBlock}).
 
+enqueue_and_push(InputBlock) ->
+    headers:absorb([block:block_to_header(InputBlock)]),
+    gen_server:cast(?MODULE, {doit_and_push, InputBlock}).
 
 save(InputBlocks) when is_list(InputBlocks) ->
     [save(InputBlock) || InputBlock <- InputBlocks];
@@ -64,7 +75,7 @@ absorb_internal(Block) ->
 	    tx_pool:dump(),
 	    tx_pool_feeder:absorb(Txs)
     end.   
-do_save(BlockPlus) ->
+save_helper(BlockPlus) ->
     Z = zlib:compress(term_to_binary(BlockPlus)),
     binary_to_term(zlib:uncompress(Z)),%sanity check, not important for long-term.
     %Hash = testnet_hasher:doit(BlockPlus),

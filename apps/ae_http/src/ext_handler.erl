@@ -1,4 +1,3 @@
-
 -module(ext_handler).
 
 -export([init/3, handle/2, terminate/3, doit/1]).
@@ -32,13 +31,12 @@ doit({pubkey}) -> {ok, keys:pubkey()};
 %doit({height}) -> {ok, block_tree:height()};
 %doit({total_coins}) -> {ok, block_tree:total_coins()};
 doit({give_block, SignedBlock}) -> 
-    %true = block:height(SignedBlock) < api:height() + 2,
-    io:fwrite("received block\n"),
-    block_absorber:enqueue(SignedBlock),
+    %true = block:height(SignedBlock) < api:height() + 2, %removed becouse we may get blocks faster then we can process them
     case block_hashes:check(block:hash(SignedBlock)) of
         true ->
             {ok, "known"};
         _ ->
+            block_absorber:enqueue_and_push(SignedBlock),
             {ok, "unknown"}
     end;
 doit({block, N, Many}) -> 
@@ -47,6 +45,8 @@ doit({block, N}) ->
     true = is_integer(N),
     true = N > -1,
     {ok, block:read_int(N)};
+doit({block_sizecap, N, Cap}) ->
+    {ok, block:read_many_sizecap(N, Cap - 10)};  %-10 for some begining and end addictional characters
 doit({header, N}) -> 
     {ok, block:block_to_header(block:read_int(N))};
 doit({headers, Many, N}) -> 
