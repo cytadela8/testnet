@@ -32,8 +32,13 @@ doit({pubkey}) -> {ok, keys:pubkey()};
 %doit({height}) -> {ok, block_tree:height()};
 %doit({total_coins}) -> {ok, block_tree:total_coins()};
 doit({give_block, SerializedSignedBlock}) ->
-    %true = block:height(SignedBlock) < api:height() + 2,
     lager:info("received block"),
+    SignedBlock = block:deserialize(SerializedSignedBlock),
+    block_absorber:enqueue(SignedBlock),
+    {ok, 0};
+doit({give_block_new, SerializedSignedBlock}) ->
+    %true = block:height(SignedBlock) < api:height() + 2,
+    lager:info("received new block"),
     SignedBlock = block:deserialize(SerializedSignedBlock),
     case block_hashes:check(block:hash(SignedBlock)) of
         true ->
