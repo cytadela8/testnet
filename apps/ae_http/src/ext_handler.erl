@@ -36,8 +36,7 @@ doit({give_block, SerializedSignedBlock}) ->
     SignedBlock = block:deserialize(SerializedSignedBlock),
     block_absorber:enqueue(SignedBlock),
     {ok, 0};
-doit({give_block_new, SerializedSignedBlock}) ->
-    %true = block:height(SignedBlock) < api:height() + 2,
+doit({give_new_block, SerializedSignedBlock}) ->
     lager:info("received new block"),
     SignedBlock = block:deserialize(SerializedSignedBlock),
     case block_hashes:check(block:hash(SignedBlock)) of
