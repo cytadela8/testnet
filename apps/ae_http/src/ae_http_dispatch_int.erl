@@ -204,13 +204,13 @@ handle_request('AddSecret', Req, _Context) ->
     ok = api:add_secret(base64:decode(Code), base64:decode(Secret)),
     {200, [], #{}};
 
-handle_request('TurnOff', _Req, _Context)
+handle_request('TurnOff', _Req, _Context) ->
     ok = api:off(),
     {200, [], #{}};
 
 
 handle_request('GetHeight', _Req, _Context) ->
-    {top, Height} = api:height(),
+    {ok, Height} = api:height(),
     {200, [], #{
             <<"height">> => Height
            }};
