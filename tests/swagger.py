@@ -228,7 +228,11 @@ class IntAPI(API):
         r = self.session.post(uri, json=data)
         return r.status_code
 
-
+    def height(self):
+        uri = self.URL + '/height'
+        r = self.session.get(uri)
+        return r.json()['height']
+        
 class ExtAPI(API):
     def __init__(self, *args, **kwargs):
         super(ExtAPI, self).__init__(*args, **kwargs)

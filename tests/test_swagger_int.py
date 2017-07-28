@@ -76,6 +76,10 @@ class InternalAPITest(SwaggerTest):
         self.c(api.fetch_account(pub2))
         # XXX check pub2's balance?
 
+    def test_height(self):
+        api = self.API['dev1']
+        self.assertTrue(0 <= api.height() <= 1000)
+
     # todo: fix api:integer_channel_balance/0
     @nottest
     def test_channel_balance(self):
@@ -137,4 +141,3 @@ class InternalAPITest(SwaggerTest):
         self.c(api2.lightning_spend('127.0.0.1', 3030, pub1, 4, 10)); sleep(0.1)
         self.c(api1.pull_channel_state('127.0.0.1', 3030)); sleep(0.1)
         self.c(api2.pull_channel_state('127.0.0.1', 3030)); sleep(0.1)
-
