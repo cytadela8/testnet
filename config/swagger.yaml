@@ -491,6 +491,18 @@ paths:
         '405':
           description: Invalid input
       security: []
+  /off:
+    post:
+      summary: Turn off
+      description: Terminates node gracefully
+      tags:
+        - internal
+      operationId: TurnOff
+      parameters: []
+      responses:
+        '405':
+          description: Invalid input
+      security: []
 
 definitions:
   CreateAccount:

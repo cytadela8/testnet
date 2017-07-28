@@ -204,6 +204,9 @@ handle_request('AddSecret', Req, _Context) ->
     ok = api:add_secret(base64:decode(Code), base64:decode(Secret)),
     {200, [], #{}};
 
+handle_request('TurnOff', _Req, _Context)
+    ok = api:off(),
+    {200, [], #{}};
 
 handle_request(OperationID, Req, Context) ->
     error_logger:error_msg(

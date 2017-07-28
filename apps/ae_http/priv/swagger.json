@@ -566,6 +566,21 @@
         },
         "security" : [ ]
       }
+    },
+    "/off" : {
+      "post" : {
+        "tags" : [ "internal" ],
+        "summary" : "Turn off",
+        "description" : "Terminates node gracefully",
+        "operationId" : "TurnOff",
+        "parameters" : [ ],
+        "responses" : {
+          "405" : {
+            "description" : "Invalid input"
+          }
+        },
+        "security" : [ ]
+      }
     }
   },
   "definitions" : {

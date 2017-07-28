@@ -174,6 +174,11 @@ get_operations() ->
             path => "/v1/sync",
             method => <<"POST">>,
             handler => 'swagger_internal_handler'
+        },
+        'TurnOff' => #{
+            path => "/v1/off",
+            method => <<"POST">>,
+            handler => 'swagger_internal_handler'
         }
     }.
 

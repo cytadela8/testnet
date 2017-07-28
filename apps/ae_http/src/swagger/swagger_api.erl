@@ -127,6 +127,10 @@ request_params('Sync') ->
         'Sync'
     ];
 
+request_params('TurnOff') ->
+    [
+    ];
+
 request_params(_) ->
     error(unknown_operation).
 
@@ -431,6 +435,9 @@ validate_response('Spend', 405, Body, ValidatorState) ->
     validate_response_body('', '', Body, ValidatorState);
 
 validate_response('Sync', 405, Body, ValidatorState) ->
+    validate_response_body('', '', Body, ValidatorState);
+
+validate_response('TurnOff', 405, Body, ValidatorState) ->
     validate_response_body('', '', Body, ValidatorState);
 
 

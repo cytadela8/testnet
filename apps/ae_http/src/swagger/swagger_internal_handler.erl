@@ -221,6 +221,14 @@ allowed_methods(
 ) ->
     {[<<"POST">>], Req, State};
 
+allowed_methods(
+    Req,
+    State = #state{
+        operation_id = 'TurnOff'
+    }
+) ->
+    {[<<"POST">>], Req, State};
+
 allowed_methods(Req, State) ->
     {[], Req, State}.
 
@@ -230,6 +238,9 @@ allowed_methods(Req, State) ->
         Req :: cowboy_req:req(),
         State :: state()
     }.
+
+is_authorized(Req, State) ->
+    {true, Req, State};
 
 is_authorized(Req, State) ->
     {true, Req, State};
@@ -516,6 +527,16 @@ valid_content_headers(
     Req0,
     State = #state{
         operation_id = 'Sync'
+    }
+) ->
+    Headers = [],
+    {Result, Req} = validate_headers(Headers, Req0),
+    {Result, Req, State};
+
+valid_content_headers(
+    Req0,
+    State = #state{
+        operation_id = 'TurnOff'
     }
 ) ->
     Headers = [],
