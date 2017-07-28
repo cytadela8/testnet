@@ -83,6 +83,10 @@ request_params('FetchPubKey') ->
     [
     ];
 
+request_params('GetBalance') ->
+    [
+    ];
+
 request_params('GetHeight') ->
     [
     ];
@@ -413,6 +417,9 @@ validate_response('FetchKeyPair', 403, Body, ValidatorState) ->
 
 validate_response('FetchPubKey', 200, Body, ValidatorState) ->
     validate_response_body('PubKey', 'PubKey', Body, ValidatorState);
+
+validate_response('GetBalance', 200, Body, ValidatorState) ->
+    validate_response_body('Balance', 'Balance', Body, ValidatorState);
 
 validate_response('GetHeight', 200, Body, ValidatorState) ->
     validate_response_body('Height', 'Height', Body, ValidatorState);

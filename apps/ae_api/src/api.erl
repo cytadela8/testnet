@@ -443,7 +443,7 @@ balance() ->
 	    -1 -> 0;
 	    _ -> integer_balance()
 	end,
-    I.
+    {ok, I}.
 
 mempool() ->
     {_, _, Txs} = tx_pool:data(),

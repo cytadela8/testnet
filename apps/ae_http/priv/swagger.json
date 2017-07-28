@@ -600,6 +600,25 @@
         },
         "security" : [ ]
       }
+    },
+    "/balance" : {
+      "get" : {
+        "tags" : [ "internal" ],
+        "summary" : "Get balance",
+        "description" : "Gives the balance of current account",
+        "operationId" : "GetBalance",
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Balance"
+            }
+          }
+        },
+        "security" : [ ]
+      }
     }
   },
   "definitions" : {
@@ -887,6 +906,15 @@
       "type" : "object",
       "properties" : {
         "height" : {
+          "type" : "integer",
+          "format" : "int64"
+        }
+      }
+    },
+    "Balance" : {
+      "type" : "object",
+      "properties" : {
+        "balance" : {
           "type" : "integer",
           "format" : "int64"
         }

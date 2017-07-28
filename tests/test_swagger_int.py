@@ -80,6 +80,10 @@ class InternalAPITest(SwaggerTest):
         api = self.API['dev1']
         self.assertTrue(0 <= api.height() <= 1000)
 
+    def test_balance(self):
+        api = self.API['dev1']
+        self.assertTrue(0 <= api.balance())
+
     # todo: fix api:integer_channel_balance/0
     @nottest
     def test_channel_balance(self):

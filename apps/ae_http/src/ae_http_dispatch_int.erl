@@ -215,6 +215,12 @@ handle_request('GetHeight', _Req, _Context) ->
             <<"height">> => Height
            }};
 
+handle_request('GetBalance', _Req, _Context) ->
+    {ok, Balance} = api:balance(),
+    {200, [], #{
+            <<"balance">> => Balance
+           }};
+
 handle_request(OperationID, Req, Context) ->
     error_logger:error_msg(
       ">>> Got not implemented request to process: ~p~n",

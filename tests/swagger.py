@@ -231,7 +231,18 @@ class IntAPI(API):
     def height(self):
         uri = self.URL + '/height'
         r = self.session.get(uri)
+        code = r.status_code
+        if code != 200:
+            return None
         return r.json()['height']
+
+    def balance(self):
+        uri = self.URL + '/balance'
+        r = self.session.get(uri)
+        code = r.status_code
+        if code != 200:
+            return None
+        return r.json()['balance']
         
 class ExtAPI(API):
     def __init__(self, *args, **kwargs):
