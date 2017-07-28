@@ -130,6 +130,11 @@ get_operations() ->
             method => <<"GET">>,
             handler => 'swagger_internal_handler'
         },
+        'GetHeight' => #{
+            path => "/v1/height",
+            method => <<"GET">>,
+            handler => 'swagger_internal_handler'
+        },
         'GetTop' => #{
             path => "/v1/top",
             method => <<"GET">>,

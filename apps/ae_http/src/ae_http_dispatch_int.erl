@@ -208,6 +208,13 @@ handle_request('TurnOff', _Req, _Context)
     ok = api:off(),
     {200, [], #{}};
 
+
+handle_request('GetHeight', _Req, _Context) ->
+    {top, Height} = api:height(),
+    {200, [], #{
+            <<"height">> => Height
+           }};
+
 handle_request(OperationID, Req, Context) ->
     error_logger:error_msg(
       ">>> Got not implemented request to process: ~p~n",
