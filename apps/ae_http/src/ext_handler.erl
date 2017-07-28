@@ -41,10 +41,10 @@ doit({give_new_block, SerializedSignedBlock}) ->
     SignedBlock = block:deserialize(SerializedSignedBlock),
     case block_hashes:check(block:hash(SignedBlock)) of
         true ->
-            {ok, "known"};
+            {ok, known};
         _ ->
             block_absorber:enqueue_and_push(SignedBlock),
-            {ok, "unknown"}
+            {ok, unknown}
     end;
 doit({block, N}) when is_integer(N), N >= 0 ->
     lager:info("received request for block ~p", [N]),
