@@ -454,7 +454,7 @@ channel_close(IP, Port, Fee) ->
     {ok, CD} = channel_manager:read(PeerId),
     SPK = testnet_sign:data(channel_feeder:them(CD)),
     {Trees,_,_} = tx_pool:data(),
-    Height = block:height(block:get_by_hash(headers:top())),
+    Height = block:height(block:read(headers:top())),
     SS = channel_feeder:script_sig_them(CD),
     {Amount, _, _, _} = spk:run(fast, SS, SPK, Height, 0, Trees),
     CID = spk:cid(SPK),
@@ -493,7 +493,7 @@ add_peer(IP, Port) ->
     0.
 sync(IP, Port) ->
     lager:info("Sync with ~p ~p ~n", [IP, Port]),
-    MyHeight = block:height(block:get_by_hash(headers:top())),
+    MyHeight = headers:height(headers:top()),
     ok = download_blocks:sync_all([{IP, Port}], MyHeight).
 
 keypair() ->
