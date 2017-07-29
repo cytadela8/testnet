@@ -1,79 +1,96 @@
 from time import sleep
-from swagger import SwaggerTest, IntAPI
+import unittest
 from nose.tools import nottest
+from swagger_client import ApiClient, InternalApi
+from swagger_client.rest import ApiException
 
+class InternalAPITest(unittest.TestCase):
+    CLIENT = {
+        'dev1': ApiClient('http://localhost:3012/v1'),
+        'dev2': ApiClient('http://localhost:3022/v1'),
+        'dev3': ApiClient('http://localhost:3032/v1'),
+    }
 
-class InternalAPITest(SwaggerTest):
     API = {
-        'dev1': IntAPI('localhost', 3012),
-        'dev2': IntAPI('localhost', 3022),
-        'dev3': IntAPI('localhost', 3032),
+        'dev1': InternalApi(CLIENT['dev1']),
+        'dev2': InternalApi(CLIENT['dev2']),
+        'dev3': InternalApi(CLIENT['dev3']),
     }
-    URL = {
-        'dev1': 'http://localhost:3012/v1',
-        'dev2': 'http://localhost:3022/v1',
-        'dev3': 'http://localhost:3032/v1'
-    }
-
+    
     def setUp(self):
         api = self.API['dev1']
         # save master key pair
-        self.master_pub, self.master_priv = self.c(api.fetch_keypair())
-        self.assertIsNotNone(self.master_pub)
-        self.assertIsNotNone(self.master_priv)
+        self.keypair = api.fetch_key_pair()
+        self.assertIsNotNone(self.keypair.public)
+        self.assertIsNotNone(self.keypair.private)
 
     def tearDown(self):
         api = self.API['dev1']
         # restore master key pair
-        self.c(api.set_keypair(self.master_pub, self.master_priv))
+        keypair = self.keypair.to_dict()
+        keypair['brain-wallet'] = ''
+        api.set_key_pair(keypair)
+
+    @nottest
+    def create_account(self, api, amount):
+        keypair = api.create_key_pair()
+        api.add_account({'pubkey': keypair.public, 'amount': amount})
+        return keypair
 
     def test_create_keypair(self):
         api = self.API['dev1']
-        pub, priv = self.c(api.create_keypair())
-        self.assertIsNotNone(pub)
-        self.assertIsNotNone(priv)
+        keypair = api.create_key_pair()
+        self.assertIsNotNone(keypair.public)
+        self.assertIsNotNone(keypair.private)
 
     def test_create_account(self):
         api = self.API['dev1']
-        pub, priv = self.c(api.create_account(10))
-        self.assertIsNotNone(pub)
-        self.assertIsNotNone(priv)
+        keypair = self.create_account(api, 10)
+        self.assertIsNotNone(keypair.public)
+        self.assertIsNotNone(keypair.private)
 
     def test_top(self):
         api = self.API['dev1']
-        _hash, height = self.c(api.top())
-        self.assertIsNotNone(_hash)
-        self.assertIsNotNone(height)
+        top = api.get_top()
+        self.assertIsNotNone(top.hash)
+        self.assertIsNotNone(top.height)
 
     def test_add_peer(self):
         api = self.API['dev1']
-        self.c(api.add_peer('46.101.103.165', 8080))
-        self.c(api.add_peer('46.101.103165', 8080), 405)
+        api.add_peer({'ip': '46.101.103.165', 'port': 8080})
+        with self.assertRaises(ApiException) as cm:
+            api.add_peer({'ip': '46.101.103165', 'port': 8080})
+        self.assertEqual(cm.exception.status, 405)
 
     def test_spend(self):
         api = self.API['dev1']
-        pub, _ = self.c(api.create_account(10))
-        self.c(api.spend(pub, 5))
+        keypair = self.create_account(api, 10)
+        api.spend({'pubkey': keypair.public, 'amount': 5})
 
     def test_sync(self):
         api = self.API['dev1']
-        self.c(api.sync('127.0.0.1', 3020))
-        self.c(api.sync('127.0.0.1.1', 3020), 405)
+        api.sync({'ip': '127.0.0.1', 'port': 3020})
+        with self.assertRaises(ApiException) as cm:
+            api.sync({'ip': '127.0.0.1.1', 'port': 3020})
+        self.assertEqual(cm.exception.status, 405)
+
 
     def test_mine_block(self):
         api = self.API['dev1']
-        self.c(api.mine_block(2, 1))
+        api.mine_block({'count': 2, 'times': 1})
 
     def test_delete_account(self):
         api = self.API['dev1']
-        master = self.c(api.fetch_pubkey())
-        pub1, priv1 = self.c(api.create_account(20))
-        self.c(api.set_keypair(pub1, priv1)); sleep(1)
-        pub2, _ = self.c(api.create_account(10)); sleep(0.5)
-        self.c(api.delete_account(pub2)); sleep(0.5)
-        self.c(api.fetch_account(master))
-        self.c(api.fetch_account(pub1), 404)
-        self.c(api.fetch_account(pub2))
+        master = api.fetch_pub_key().pubkey
+        kp1 = self.create_account(api, 20)
+        api.set_key_pair({'public': kp1.public, 'private': kp1.private, 'brain-wallet': ''}); sleep(1)
+        kp2 = self.create_account(api, 10); sleep(0.5)
+        api.delete_account({'pubkey': kp2.public}); sleep(0.5)
+        api.fetch_account({'pubkey': master})
+        with self.assertRaises(ApiException) as cm:
+            api.fetch_account({'pubkey': kp1.public})
+        self.assertEqual(cm.exception.status, 404)
+        api.fetch_account({'pubkey': kp2.public})
         # XXX check pub2's balance?
 
     # todo: fix api:integer_channel_balance/0

@@ -163,9 +163,11 @@ unit-tests:
 
 swagger: config/swagger.yaml
 	@swagger-codegen generate -i $< -l erlang-server -o $(SWTEMP)
+	@swagger-codegen generate -i $< -l python -o $(SWTEMP)
 	@echo "Swagger tempdir: $(SWTEMP)"
 	@cp $(SWTEMP)/priv/swagger.json apps/ae_http/priv/
 	@cp $(SWTEMP)/src/*.erl $(SWAGGER)/
+	@cp -r $(SWTEMP)/swagger_client tests/
 	@rm -fr $(SWTEMP)
 
 #for rebar.lock

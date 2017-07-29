@@ -1,32 +1,28 @@
-from swagger import SwaggerTest, IntAPI, ExtAPI
+import unittest
+from swagger_client import ApiClient, InternalApi, ExternalApi
+from swagger_client.rest import ApiException
 
-
-class ExternalAPITest(SwaggerTest):
+class ExternalAPITest(unittest.TestCase):
     INT_API = {
-        'dev1': IntAPI('localhost', 3012),
-        'dev2': IntAPI('localhost', 3022),
-        'dev3': IntAPI('localhost', 3032),
+        'dev1': InternalApi(ApiClient('http://localhost:3012/v1')),
+        'dev2': InternalApi(ApiClient('http://localhost:3022/v1')),
+        'dev3': InternalApi(ApiClient('http://localhost:3032/v1')),
     }
     API = {
-        'dev1': ExtAPI('localhost', 3013),
-        'dev2': ExtAPI('localhost', 3023),
-        'dev3': ExtAPI('localhost', 3033)
+        'dev1': ExternalApi(ApiClient('http://localhost:3013/v1')),
+        'dev2': ExternalApi(ApiClient('http://localhost:3023/v1')),
+        'dev3': ExternalApi(ApiClient('http://localhost:3033/v1')),
     }
-    URL = {
-        'dev1': 'http://localhost:3013/v1',
-        'dev2': 'http://localhost:3023/v1',
-        'dev3': 'http://localhost:3033/v1'
-    }
-
+    
     def test_header(self):
         api = self.API['dev1']
-        block_id, header = self.c(api.header(0))
-        self.assertEqual(block_id, 0)
-        self.assertIsNotNone(header)
+        header = api.get_header({'block-id': 0}) 
+        self.assertEqual(header.block_id, 0)
+        self.assertIsNotNone(header.block_header)
 
     def test_headers(self):
         int_api = self.INT_API['dev1']
-        self.c(int_api.mine_block(1, 1))
+        int_api.mine_block({'count': 1, 'times': 1})
         api = self.API['dev1']
-        a = self.c(api.headers([0, 1]))
+        a = api.get_headers([{'block-id': 0}, {'block-id': 1}])
         self.assertEqual(len(a), 2)
