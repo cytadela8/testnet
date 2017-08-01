@@ -160,10 +160,10 @@ read_many_sizecap_internal(empty, _) ->
     [];
 read_many_sizecap_internal(X, Cap) ->
     Xsize = iolist_size(packer:pack(X)) + 1, %+1 for the delimeter char (,)
-    if
-        Xsize > Cap ->
-            [];
+    case Xsize > Cap of
         true ->
+            [];
+        false ->
             PH = prev_hash(X),
             [X | read_many_sizecap(PH, Cap - Xsize)] 
 end.
