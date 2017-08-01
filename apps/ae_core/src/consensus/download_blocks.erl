@@ -41,30 +41,23 @@ sync(Peer, MyHeight) ->
     end.
 
 trade_blocks(Peer, [PrevBlock|PBT] = Blocks) ->
-    %io:fwrite("trade blocks"),
-    %"nextBlock" is from earlier in the chain than prevblock. we are walking backwards
-    case block:height(PrevBlock) of 
-        0 ->  %if PrevBlock is block 0 (genesis) we stop
-            send_blocks(Peer, block:hash(block:top()), block:hash(block:read_int(0)), [], 0),
-            block_absorber:enqueue(PBT);
-        _ ->
-            %PrevHash = block:hash(PrevBlock), we can't get that becouse to hash we need headers, and to have header we have to have the header of previous block
-            %{ok, PowBlock} = talker:talk({block, Height}, Peer),
-            NextHash = block:prev_hash(PrevBlock),
-            M = block:read(NextHash),%check if it is in our memory already.
-            case M of
-	        empty -> 
-                    {ok, Sizecap} = application:get_env(ae_core, download_blocks_sizecap),
-                    {ok, NextBatch} = talker:talk({block_sizecap, NextHash, Sizecap}, Peer),
-	    	    %Heighest first, lowest last. We need to reverse
-		    trade_blocks(Peer, lists:append(lists:reverse(NextBatch), Blocks));
-	        _ ->
-                    LastCommonHash = last_known_block_hash(NextHash, Blocks),
-                    %We send blocks before absorbing to make sure we don't send any downloaded blocks
-                    send_blocks(Peer, block:hash(block:top()), LastCommonHash, [], block:height(block:read(LastCommonHash))),
-                    NewBlocks = remove_known_blocks(Blocks),
-	            block_absorber:enqueue(NewBlocks)
-            end
+    %"NextHash" is from earlier in the chain than PrevBlock. we are walking backwards
+    NextHash = block:prev_hash(PrevBlock),
+    PrevBlockIsGenesis = block:height(PrevBlock) =< 0,
+    M = block:read(NextHash),%check if it is in our memory already.
+    if
+        M =/= empty; PrevBlockIsGenesis ->
+            LastCommonHash = last_known_block_hash(NextHash, Blocks),
+            %We send blocks before absorbing to make sure we don't send any downloaded blocks
+            send_blocks(Peer, block:hash(block:top()), LastCommonHash, [], block:height(block:read(LastCommonHash))),
+            NewBlocks = remove_known_blocks(Blocks),
+	    block_absorber:enqueue(NewBlocks);
+        M == empty ->
+            false = PrevBlockIsGenesis,
+            {ok, Sizecap} = application:get_env(ae_core, download_blocks_sizecap),
+            {ok, NextBatch} = talker:talk({block_sizecap, NextHash, Sizecap}, Peer),
+            %Heighest first, lowest last. We need to reverse
+            trade_blocks(Peer, lists:append(lists:reverse(NextBatch), Blocks))
     end.
 
 remove_known_blocks([]) ->
