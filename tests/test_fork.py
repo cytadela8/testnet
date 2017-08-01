@@ -13,18 +13,20 @@ class ForkTest(ApiUser):
 
         self.sync(DEV_1_INT, [[127, 0, 0, 1], 3020], sleep=1)
         self.assertEqual(self.top(DEV_1_INT, []), self.top(DEV_2_INT, []))
+        self.sync(DEV_1_INT, [[127, 0, 0, 1], 3020], sleep=0)
+        self.sync(DEV_2_INT, [[127, 0, 0, 1], 3010], sleep=0.5)
 
     #@nottest
     def test_three(self):
         return
-        self.mine_block(DEV_1_INT, [3, 1], sleep=0.5)
+        self.mine_block(DEV_1_INT, [1, 1], sleep=0.5)
         self.sync(DEV_2_INT, [[127, 0, 0, 1], 3010])
         self.sync(DEV_3_INT, [[127, 0, 0, 1], 3010], sleep=1)
         self.assertEqual(self.top(DEV_1_INT, []), self.top(DEV_2_INT, []))
         self.assertEqual(self.top(DEV_1_INT, []), self.top(DEV_3_INT, []))
 
-        self.mine_block(DEV_1_INT, [2, 1])
-        self.mine_block(DEV_2_INT, [4, 1], sleep=0.5)
+        self.mine_block(DEV_1_INT, [3, 1])
+        self.mine_block(DEV_2_INT, [2, 1], sleep=0.5)
 
         self.sync(DEV_1_INT, [[127, 0, 0, 1], 3030], sleep=1)
         self.assertEqual(self.top(DEV_1_INT, []), self.top(DEV_3_INT, []))
