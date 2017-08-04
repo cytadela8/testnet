@@ -19,10 +19,13 @@ terminate(_, _) -> io:format("died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 
 handle_cast(_, {go, _, []}) ->
+    lager:info("Gossip finished reason: no peers left"),
     {noreply, stop};
 handle_cast(_, {go, 0, _}) ->
+    lager:warning("Gossip finished, but this shouldn't happen this way"),
     {noreply, stop};
 handle_cast({known,Block}, {go, 1, _}) ->
+    lager:info("Gossip finished reason: known limit"),
     {noreply, stop};
 handle_cast({known,Block}, {go, N, Peers}) ->
     {noreply, {go, N-1, Peers}};
@@ -33,14 +36,14 @@ handle_cast({push,Block}, {go, N, [Peer | Peers]}) ->
     spawn(fun() ->
                   Resp = push_to_peer(Block, Peer), 
                   case Resp of
-                      known ->
+                      {known} ->
                           lager:debug("got known\n"),
                           gen_server:cast(?MODULE, {known, Block});
-                      unknown ->
+                      {unknown} ->
                           lager:debug("got unknown\n"),
                           gen_server:cast(?MODULE, {unknown, Block});
                       _ ->
-                          lager:debug("got \n"),
+                          lager:debug("got unexpected: ~p\n", [Resp]),
                           gen_server:cast(?MODULE, {unknown, Block})
                   end
           end),
@@ -54,10 +57,12 @@ handle_call(status, _From, X) -> {reply, X, X};
 handle_call(start, _From, stop) ->
     {reply, go, {go, gossip_stop_count(), shuffle(peers:all())}};
 handle_call(start, _From, {go, _, _} = State) ->
+    lager:warning("Tried to start new gosspi job when one was already going"),
     {reply, already_working, State};
 handle_call(_, _From, X) -> {reply, X, X}.
 
 push_start(Block) ->
+    lager:debug("Starting gossip"),
     gen_server:call(?MODULE, start),
     {ok, ProcCount} = application:get_env(ae_core, push_block_gossip_process_count),
     push(Block, ProcCount).
@@ -71,6 +76,7 @@ push(Block) ->
     gen_server:cast(?MODULE, {push,Block}).
     
 push_to_peer(Block, Peer) ->
+    lager:debug("Gossiping to peer ~p", [Peer]),
     talker:talk({give_new_block, Block}, Peer).
 
 stop() -> gen_server:cast(?MODULE, stop).
