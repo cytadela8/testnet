@@ -44,6 +44,17 @@ class ApiUser(unittest.TestCase):
                      DEV_3: self.URL_DEV_3,
                      DEV_3_INT: self.URL_DEV_3_INT}
 
+    def save_and_remove_peers(self, node):
+        peer_list = self.list_peers(node, [])[1][1:]
+        for peer in peer_list:
+            self.remove_peer(node, peer)
+        return peer_list
+
+    def clear_and_add_peers(self, node, peer_list):
+        self.save_and_remove_peers(node)
+        for peer in peer_list:
+            self.add_peer(node, peer)
+
     def mine_block(self, node, args, sleep=0):
         return self._request(node, 'mine_block', args, sleep)
 
@@ -62,6 +73,12 @@ class ApiUser(unittest.TestCase):
     def add_peer(self, node, args, sleep=0):
         return self._request(node, 'add_peer', args, sleep)
 
+    def remove_peer(self, node, args, sleep=0):
+        return self._request(node, 'remove_peer', args, sleep)
+
+    def list_peers(self, node, args, sleep=0):
+        return self._request(node, 'list_peers', args, sleep)
+    
     def create_account(self, node, args, sleep=0):
         return self._request(node, 'create_account', args, sleep)
 

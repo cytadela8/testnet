@@ -27,9 +27,9 @@ handle_cast({doit, BP}, X) ->
     {noreply, X};
 handle_cast({doit_and_push, BP}, X) ->
     case absorb_internal(BP) of
-        ok -> ok;
-        _ ->
-            push_block:push_start(BP)
+        ok -> 
+            push_block:push_start(BP);
+        _ -> error
     end,
     {noreply, X}.
 handle_call({doit, BP}, _From, X) -> 
@@ -46,7 +46,8 @@ enqueue(InputBlock) ->
     gen_server:cast(?MODULE, {doit, InputBlock}).
 
 enqueue_and_push(InputBlock) ->
-    headers:absorb([block:block_to_header(InputBlock)]),
+    Header = block:block_to_header(InputBlock),
+    headers:absorb([Header]),
     gen_server:cast(?MODULE, {doit_and_push, InputBlock}).
 
 save(InputBlocks) when is_list(InputBlocks) ->

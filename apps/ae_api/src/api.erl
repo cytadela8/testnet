@@ -4,7 +4,8 @@
 
 -export([height/0, off/0, balance/0, spend/2, mempool/0,
          top/0, sign/1, mine_block/0, mine_block/2,
-         add_peer/2, sync/2, load_key/3, keypair/0, new_keypair/0]).
+         add_peer/2, remove_peer/2, list_peers/0,
+         sync/2, load_key/3, keypair/0, new_keypair/0]).
 
 -export([create_account/2, delete_account/1, account/1,
          repo_account/1, repo_account/2, coinbase/1]).
@@ -510,6 +511,14 @@ channel_solo_close(_CID, Fee, SPK, ScriptSig) ->
 add_peer(IP, Port) ->
     peers:add(IP, Port),
     0.
+
+remove_peer(IP, Port) ->
+    peers:remove(IP, Port),
+    0.
+
+list_peers() ->
+    peers:all().
+
 sync(IP, Port) ->
     lager:info("Sync with ~p ~p ~n", [IP, Port]),
     MyHeight = headers:height(headers:top()),
