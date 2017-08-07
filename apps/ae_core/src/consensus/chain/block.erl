@@ -4,8 +4,9 @@
          height/1, prev_hash/1, txs/1, trees_hash/1, time/1, difficulty/1, comment/1, version/1, pow/1, trees/1, prev_hashes/1, 
          get_by_height_in_chain/2, get_by_height/1, hash/1, get_by_hash/1, initialize_chain/0, make/4,
          mine/1, mine/2, mine2/2, check/1, 
-         guess_number_of_cpu_cores/0, top/0
-        ]).
+         guess_number_of_cpu_cores/0, top/0,
+         serialize/1, deserialize/1
+    ]).
 
 -record(block, {height,
                 prev_hash,
@@ -14,7 +15,7 @@
                 difficulty,
                 version,
                 nonce = 0,
-                trees,
+                trees :: trees:trees(),
                 txs,
                 prev_hashes = {prev_hashes},
                 proofs = [],
@@ -290,6 +291,60 @@ initialize_chain() ->
     headers:hard_set_top(Header0),
     block_hashes:add(hash(Header0)),
     Header0.
+
+serialize(B) ->
+    HB = constants:hash_size()*8,
+    HtB = constants:height_bits(),
+    TB = constants:time_bits(),
+    VB = constants:version_bits(),
+    DB = 16,
+    HB = bit_size(B#block.prev_hash),
+    HB = bit_size(B#block.trees_hash),
+    Rest = term_to_binary({B#block.txs,
+                           B#block.proofs,
+                           B#block.prev_hashes %% TODO Do not serialize.
+                          }),
+    <<(B#block.prev_hash)/binary,
+      (B#block.height):HtB,
+      (B#block.time):TB,
+      (B#block.version):VB,
+      (B#block.trees_hash)/binary,
+      (B#block.difficulty):DB,
+      (B#block.nonce):HB,
+      Rest/binary %% TODO Define proper serialization e.g. for atoms.
+    >>.
+
+deserialize(B) ->
+    HB = constants:hash_size()*8,
+    HtB = constants:height_bits(),
+    TB = constants:time_bits(),
+    VB = constants:version_bits(),
+    DB = 16,
+    <<
+      PrevHash:HB/bitstring,
+      Height:HtB,
+      Time:TB,
+      Version:VB,
+      TreesHash:HB/bitstring,
+      Difficulty:DB,
+      Nonce:HB,
+      Rest/binary
+    >> = B,
+    {Txs,
+     Proofs,
+     PrevHashes} = binary_to_term(Rest),
+    #block{prev_hash = PrevHash,
+           height = Height,
+           time = Time,
+           version = Version,
+           trees_hash = TreesHash,
+           difficulty = Difficulty,
+           nonce = Nonce,
+           txs = Txs,
+           proofs = Proofs,
+           prev_hashes = PrevHashes,
+           trees = trees:new(0, 0, 0, 0, 0, 0), %% Dummy internal representation of state trees.
+           comment = <<>>}. %% TODO Reconsider comment and its serialization.
 
 
 %% Tests

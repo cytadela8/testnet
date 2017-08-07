@@ -26,7 +26,7 @@ do_sync({ok, TopBlock, Height} = _RemoteTopResult, MyHeight, Peer) ->
         JumpHeight < Height ->
             lager:debug("JumpHeight < Height"),
 	    true = JumpHeight > 0,
-            BlockAtJumpHeight = remote_peer({block, JumpHeight}, Peer),
+            BlockAtJumpHeight = block:deserialize(remote_peer({block, JumpHeight}, Peer)),
             trade_blocks(Peer, [BlockAtJumpHeight], JumpHeight);
         true ->
             trade_blocks(Peer, [TopBlock], Height)
@@ -50,7 +50,7 @@ trade_blocks(Peer, [PrevBlock|PBT] = CurrentBlocks, Height) ->
         empty ->
     	    lager:debug("we don't have a parent for this block ~p", [OurChainAtPrevHash]),
 	    true = Height > 1,
-            RemoteBlockThatWeMiss = remote_peer({block, Height-1}, Peer),
+            RemoteBlockThatWeMiss = block:deserialize(remote_peer({block, Height-1}, Peer)),
     	    lager:debug("trade_blocks: height > 1 ~p", [packer:pack({got_block, RemoteBlockThatWeMiss})]),
             trade_blocks(Peer, [RemoteBlockThatWeMiss|CurrentBlocks], Height-1);
         _ ->

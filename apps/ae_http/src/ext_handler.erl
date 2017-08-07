@@ -39,7 +39,7 @@ doit({give_block, SignedBlock}) ->
 doit({block, N}) ->
     true = is_integer(N),
     true = N > -1,
-    {ok, block:get_by_height(N)};
+    {ok, block:serialize(block:get_by_height(N))};
 doit({header, N}) -> 
     {ok, block:block_to_header(block:get_by_height(N))};
 doit({headers, Many, N}) -> 
