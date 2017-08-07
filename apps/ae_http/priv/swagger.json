@@ -510,17 +510,29 @@
       }
     },
     "/channel-balance" : {
-      "get" : {
+      "post" : {
         "tags" : [ "internal" ],
         "operationId" : "ChannelBalance",
+        "consumes" : [ "application/json" ],
         "produces" : [ "application/json" ],
-        "parameters" : [ ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "IP and port specifying channel",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/ChannelBalance"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "successful operation",
             "schema" : {
-              "$ref" : "#/definitions/ChannelBalance"
+              "$ref" : "#/definitions/ChannelBalanceValue"
             }
+          },
+          "405" : {
+            "description" : "Invalid input"
           }
         },
         "security" : [ ]
@@ -845,8 +857,17 @@
     "ChannelBalance" : {
       "type" : "object",
       "properties" : {
-        "balance" : {
+        "pubkey" : {
           "type" : "string"
+        }
+      }
+    },
+    "ChannelBalanceValue" : {
+      "type" : "object",
+      "properties" : {
+        "balance" : {
+          "type" : "integer",
+          "format" : "int64"
         }
       }
     },

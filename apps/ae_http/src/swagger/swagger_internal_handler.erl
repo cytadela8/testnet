@@ -83,7 +83,7 @@ allowed_methods(
         operation_id = 'ChannelBalance'
     }
 ) ->
-    {[<<"GET">>], Req, State};
+    {[<<"POST">>], Req, State};
 
 allowed_methods(
     Req,

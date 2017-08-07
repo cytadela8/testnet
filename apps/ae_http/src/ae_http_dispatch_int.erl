@@ -185,9 +185,11 @@ handle_request('MineBlock', Req, _Context) ->
     ok = api:mine_block(Count, Times),
     {200, [], #{}};
 
-handle_request('ChannelBalance', _Req, _Context) ->
-    ChannelBalance = api:channel_balance(),
-    {200, [], #{<<"balance">> => list_to_binary(ChannelBalance)}};
+handle_request('ChannelBalance', Req, _Context) ->
+    CB = maps:get('ChannelBalance', Req),
+    PK = base64:decode(maps:get(<<"pubkey">>, CB)),
+    Val = api:channel_balance(PK),
+    {200, [], #{<<"balance">> => Val}};
 
 handle_request('ChannelSoloClose', _Req, _Context) ->
     ok = api:channel_solo_close(),

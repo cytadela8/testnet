@@ -9,7 +9,8 @@
 -export([create_account/2, delete_account/1, account/1,
          repo_account/1, repo_account/2, coinbase/1]).
 
--export([channel_balance/0,
+-export([%%channel_balance/0, 
+         channel_balance/1,
          new_channel_with_server/3, pull_channel_state/2,
          add_secret/2, pull_channel_state/0, channel_spend/1, channel_spend/3,
          new_channel_tx/6, new_channel_tx/7, close_channel_with_server/0,
@@ -255,24 +256,24 @@ channel_manager_update(ServerID, SSPK2, DefaultSS) ->
     channel_manager:write(ServerID, NewCD),
     ok.
 
-channel_balance() ->
-    %% Why prod address?
-    channel_balance(constants:server_ip(), constants:server_port()).
+%% channel_balance() ->
+%%     %% Why prod address?
+%%     channel_balance(constants:server_ip(), constants:server_port()).
 
-channel_balance(Ip, Port) ->
-    Balance = integer_channel_balance(Ip, Port),
-    FormattedBalance = pretty_display(Balance),
-    lager:info("Channel balance: ~p", [FormattedBalance]),
-    FormattedBalance.
+%% channel_balance(Ip, Port) ->
+%%     {ok, OtherPubKey} = talker:talk({pubkey}, Ip, Port),
+%%     Balance = channel_balance(OtherPubKey).
+%%     FormattedBalance = pretty_display(Balance),
+%%     lager:info("Channel balance: ~p", [FormattedBalance]),
+%%     FormattedBalance.
 
-integer_channel_balance(Ip, Port) ->
-    {ok, Other} = talker:talk({pubkey}, Ip, Port),
-    {ok, CD} = channel_manager:read(Other),
+channel_balance(OtherPubKey) ->
+    {ok, CD} = channel_manager:read(OtherPubKey),
     SSPK = channel_feeder:them(CD),
     SPK = testnet_sign:data(SSPK),
     SS = channel_feeder:script_sig_them(CD),
     {Trees, NewHeight, _Txs} = tx_pool:data(),
-    Channels = trees:accounts(Trees),
+    Channels = trees:channels(Trees),
     {Amount, _, _, _} = spk:run(fast, SS, SPK, NewHeight, 0, Trees),
     CID = spk:cid(SPK),
     {_, Channel, _} = channels:get(CID, Channels),

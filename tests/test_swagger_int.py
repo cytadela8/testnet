@@ -80,7 +80,7 @@ class InternalAPITest(SwaggerTest):
     @nottest
     def test_channel_balance(self):
         api = self.API['dev1']
-        balance = self.c(api.channel_balance())
+        balance = self.c(api.channel_balance(pub2))
         self.assertIsNotNone(balance)
 
     @nottest
