@@ -17,7 +17,7 @@ sync(Peer, MyHeight) ->
     TopResp = talker:talk({top}, Peer),
     case TopResp of
         {error, failed_connect} -> 
-            lager:warn("failed connect"),
+            lager:warning("failed connect"),
             ok;
         {ok, TopBlock, Height}  ->
             {ok, DBB} = application:get_env(ae_core, download_blocks_batch),
@@ -39,12 +39,12 @@ trade_blocks(Peer, [PrevBlock|PBT] = Blocks) ->
     %"NextHash" is from earlier in the chain than PrevBlock. we are walking backwards
     NextHash = block:prev_hash(PrevBlock),
     PrevBlockIsGenesis = block:height(PrevBlock) =< 0,
-    M = block:read(NextHash),%check if it is in our memory already.
+    M = block:get_by_hash(NextHash),%check if it is in our memory already.
     if
         M =/= empty; PrevBlockIsGenesis ->
             LastCommonHash = last_known_block_hash(NextHash, Blocks),
             %We send blocks before absorbing to make sure we don't send any downloaded blocks
-            send_blocks(Peer, block:hash(block:top()), LastCommonHash, [], block:height(block:read(LastCommonHash))),
+            send_blocks(Peer, block:hash(block:top()), LastCommonHash, [], block:height(block:get_by_hash(LastCommonHash))),
             NewBlocks = remove_known_blocks(Blocks),
             block_absorber:enqueue(NewBlocks);
         M == empty ->
@@ -59,7 +59,7 @@ remove_known_blocks([]) ->
     [];
 remove_known_blocks([PrevBlock | PBT]) ->
     PrevHash = block:hash(PrevBlock),
-    case block:read(PrevHash) of 
+    case block:get_by_hash(PrevHash) of 
         empty ->
             [PrevBlock | PBT];
         _ ->
@@ -70,7 +70,7 @@ last_known_block_hash(Hash,[]) ->
     Hash;
 last_known_block_hash(Hash,[First | Other]) ->
     HashFirst = block:hash(First),
-    case block:read(HashFirst) of
+    case block:get_by_hash(HashFirst) of
         empty ->
             Hash;
         _ ->
@@ -80,11 +80,11 @@ last_known_block_hash(Hash,[First | Other]) ->
 send_blocks(Peer, T, T, L, _) -> 
     send_blocks_external(Peer, L);
 send_blocks(Peer, TopHash, CommonHash, L, CommonHeight) ->
-    Block = block:read(TopHash),
+    Block = block:get_by_hash(TopHash),
     PrevHash = block:prev_hash(Block),
     case block:height(Block) of
         CommonHeight -> %if we realize, we are on diffrent fork then the peer
-            BlockCommon = block:read(CommonHash),
+            BlockCommon = block:get_by_hash(CommonHash),
             NewCommon = block:prev_hash(BlockCommon),
             send_blocks(Peer, PrevHash, NewCommon, [Block|L], CommonHeight-1); %we send one more block till we find one common with our main chain and the fork
         _ ->

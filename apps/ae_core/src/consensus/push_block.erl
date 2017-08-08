@@ -57,7 +57,7 @@ handle_call(status, _From, X) -> {reply, X, X};
 handle_call(start, _From, stop) ->
     {reply, go, {go, gossip_stop_count(), shuffle(peers:all())}};
 handle_call(start, _From, {go, _, _} = State) ->
-    lager:warn("Tried to start new gosspi job when one was already going"),
+    lager:warning("Tried to start new gosspi job when one was already going"),
     {reply, already_working, State};
 handle_call(_, _From, X) -> {reply, X, X}.
 

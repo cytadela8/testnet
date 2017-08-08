@@ -1,3 +1,4 @@
+
 -module(ext_handler).
 
 -export([init/3, handle/2, terminate/3, doit/1]).
@@ -42,20 +43,17 @@ doit({give_new_block, SignedBlock}) ->
             block_absorber:enqueue_and_push(SignedBlock),
             {unknown}
     end;
-doit({block, N, Many}) -> 
-    {ok, block:read_many(N, Many)};
 doit({block, N}) -> 
     true = is_integer(N),
     true = N > -1,
-    {ok, block:read_int(N)};
+    {ok, block:get_by_height(N)};
 doit({block_sizecap, N, Cap}) ->
-    {ok, block:read_many_sizecap(N, Cap - 10)};  %-10 for some begining and end addictional characters
+    {ok, block:get_with_sizecap(N, Cap - 10)};  %-10 for some begining and end addictional characters
 doit({header, N}) -> 
-    {ok, block:block_to_header(block:read_int(N))};
+    {ok, block:block_to_header(block:get_by_height(N))};
 doit({headers, Many, N}) -> 
     X = many_headers(Many, N),
     {ok, X};
-    %{ok, block_tree:read_int(N)};
 doit({tophash}) -> {ok, headers:top()};
 %doit({recent_hash, H}) -> {ok, block_tree:is_key(H)};
 doit({peers}) ->
@@ -213,7 +211,7 @@ proof_packer(X) -> X.
     %Proof2 = list_to_tuple([proof|tuple_to_list(Proof)]),
 many_headers(M, _) when M < 1 -> [];
 many_headers(Many, N) ->    
-    [block:block_to_header(block:read_int(N))|
+    [block:block_to_header(block:get_by_height(N))|
      many_headers(Many-1, N+1)].
     
     
