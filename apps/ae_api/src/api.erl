@@ -9,8 +9,7 @@
 -export([create_account/2, delete_account/1, account/1,
          repo_account/1, repo_account/2, coinbase/1]).
 
--export([%%channel_balance/0, 
-         channel_balance/1,
+-export([channel_balance/1,
          new_channel_with_server/3, pull_channel_state/2,
          add_secret/2, pull_channel_state/0, channel_spend/1, channel_spend/3,
          new_channel_tx/6, new_channel_tx/7, close_channel_with_server/0,
@@ -255,17 +254,6 @@ channel_manager_update(ServerID, SSPK2, DefaultSS) ->
     NewCD = channel_feeder:new_cd(SPK, SSPK2, [DefaultSS|MeSS], [DefaultSS|ThemSS], Entropy, CID),
     channel_manager:write(ServerID, NewCD),
     ok.
-
-%% channel_balance() ->
-%%     %% Why prod address?
-%%     channel_balance(constants:server_ip(), constants:server_port()).
-
-%% channel_balance(Ip, Port) ->
-%%     {ok, OtherPubKey} = talker:talk({pubkey}, Ip, Port),
-%%     Balance = channel_balance(OtherPubKey).
-%%     FormattedBalance = pretty_display(Balance),
-%%     lager:info("Channel balance: ~p", [FormattedBalance]),
-%%     FormattedBalance.
 
 channel_balance(OtherPubKey) ->
     {ok, CD} = channel_manager:read(OtherPubKey),
