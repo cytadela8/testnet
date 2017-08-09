@@ -31,14 +31,14 @@ terminate(_Reason, _Req, _State) -> ok.
 doit({pubkey}) -> {ok, keys:pubkey()};
 %doit({height}) -> {ok, block_tree:height()};
 %doit({total_coins}) -> {ok, block_tree:total_coins()};
-doit({give_block, SignedBlock}) -> 
+doit({give_block, SerializedSignedBlock}) ->
     %true = block:height(SignedBlock) < api:height() + 2,
-    io:fwrite("received block\n"),
+    lager:info("received block"),
+    SignedBlock = block:deserialize(SerializedSignedBlock),
     block_absorber:enqueue(SignedBlock),
     {ok, 0};
-doit({block, N}) ->
-    true = is_integer(N),
-    true = N > -1,
+doit({block, N}) when is_integer(N), N >= 0 ->
+    lager:info("received request for block ~p", [N]),
     {ok, block:serialize(block:get_by_height(N))};
 doit({header, N}) -> 
     {ok, block:block_to_header(block:get_by_height(N))};
@@ -61,10 +61,11 @@ doit({txs, Txs}) ->
     io:fwrite("received txs\n"),
     tx_pool_feeder:absorb(Txs),
     {ok, 0};
-doit({top}) -> 
+doit({top}) ->
+    lager:info("received request for top"),
     Top = block:top(),
     Height = block:height(Top),
-    {ok, Top, Height};
+    {ok, block:serialize(Top), Height};
 doit({test}) -> 
     {test_response};
 doit({test, N}) ->
@@ -186,12 +187,11 @@ doit({remove_trade, AccountID, Price, Type, Amount, OID, SSPK}) ->
     %give them their money back
     %don't remove trades that are already being matched.
     ok;
-    
+
 doit(X) ->
-    io:fwrite("I can't handle this \n"),
-    io:fwrite(packer:pack(X)), %unlock2
+    lager:warning("I can't handle this ~s", [packer:pack(X)]), %unlock2
     {error}.
-    
+
 proof_packer(X) when is_tuple(X) ->
     proof_packer(tuple_to_list(X));
 proof_packer([]) -> [];

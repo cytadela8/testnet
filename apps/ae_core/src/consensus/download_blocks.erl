@@ -14,11 +14,15 @@ sync_all([Peer|T], Height) ->
 
 
 sync(Peer, MyHeight) ->
-    RemoteTop = remote_peer({top}, Peer),
-	do_sync(RemoteTop, MyHeight, Peer).
+    case remote_peer({top}, Peer) of
+        {ok, SerializedTopBlock, Height} ->
+            TopBlock = block:deserialize(SerializedTopBlock),
+            RemoteTop = {ok, TopBlock, Height},
+            do_sync(RemoteTop, MyHeight, Peer);
+        {error} ->
+            ok
+    end.
 
-do_sync(error, _, _) ->
-    ok;
 do_sync({ok, TopBlock, Height} = _RemoteTopResult, MyHeight, Peer) ->
     {ok, DBB} = application:get_env(ae_core, download_blocks_batch),
     JumpHeight = MyHeight + DBB,
@@ -85,7 +89,7 @@ send_blocks_external(Peer, Blocks) ->
 
 do_send_blocks(_, []) -> ok;
 do_send_blocks(Peer, [Block|T]) ->
-    remote_peer({give_block, Block}, Peer),
+    remote_peer({give_block, block:serialize(Block)}, Peer),
     timer:sleep(20),
     do_send_blocks(Peer, T).
 
