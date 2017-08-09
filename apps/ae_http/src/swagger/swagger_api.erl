@@ -388,7 +388,7 @@ validate_response('AddSecret', 405, Body, ValidatorState) ->
     validate_response_body('', '', Body, ValidatorState);
 
 validate_response('ChannelBalance', 200, Body, ValidatorState) ->
-    validate_response_body('ChannelBalanceValue', 'ChannelBalanceValue', Body, ValidatorState);
+    validate_response_body('ChannelBalanceResult', 'ChannelBalanceResult', Body, ValidatorState);
 validate_response('ChannelBalance', 405, Body, ValidatorState) ->
     validate_response_body('', '', Body, ValidatorState);
 

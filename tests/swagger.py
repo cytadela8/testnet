@@ -208,7 +208,7 @@ class IntAPI(API):
         code = r.status_code
         if code != 200:
             return code, None
-        return code, r.json()['balance']
+        return code, r.json()
 
     def channel_solo_close(self):
         uri = self.URL + '/channel-solo-close'

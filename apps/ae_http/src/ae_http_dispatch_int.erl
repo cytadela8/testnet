@@ -189,7 +189,7 @@ handle_request('ChannelBalance', Req, _Context) ->
     CB = maps:get('ChannelBalance', Req),
     PK = base64:decode(maps:get(<<"pubkey">>, CB)),
     Val = api:channel_balance(PK),
-    {200, [], #{<<"balance">> => Val}};
+    {200, [], Val};
 
 handle_request('ChannelSoloClose', _Req, _Context) ->
     ok = api:channel_solo_close(),
