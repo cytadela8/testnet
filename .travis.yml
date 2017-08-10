@@ -10,6 +10,13 @@ script:
 after_failure:
   - ./ci after_failure "${JOB:?}" "${TRAVIS_BUILD_DIR:?}"
 matrix:
+  include:
+    - language: erlang
+      otp_release: 20.0.1
+      env: JOB=tests
+    - language: erlang
+      otp_release: 18.3
+      env: JOB=tests
   allow_failures:
     - env: JOB=unit-tests
     - env: JOB=dialyzer
