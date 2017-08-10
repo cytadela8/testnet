@@ -87,7 +87,7 @@ get_operations() ->
         },
         'ChannelBalance' => #{
             path => "/v1/channel-balance",
-            method => <<"GET">>,
+            method => <<"POST">>,
             handler => 'swagger_internal_handler'
         },
         'ChannelSoloClose' => #{

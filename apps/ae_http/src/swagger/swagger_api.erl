@@ -46,6 +46,7 @@ request_params('AddSecret') ->
 
 request_params('ChannelBalance') ->
     [
+        'ChannelBalance'
     ];
 
 request_params('ChannelSoloClose') ->
@@ -204,6 +205,15 @@ request_param_info('AddPeer', 'Peer') ->
     };
 
 request_param_info('AddSecret', 'Secret') ->
+    #{
+        source =>   body,
+        rules => [
+            schema,
+            required
+        ]
+    };
+
+request_param_info('ChannelBalance', 'ChannelBalance') ->
     #{
         source =>   body,
         rules => [
@@ -378,7 +388,9 @@ validate_response('AddSecret', 405, Body, ValidatorState) ->
     validate_response_body('', '', Body, ValidatorState);
 
 validate_response('ChannelBalance', 200, Body, ValidatorState) ->
-    validate_response_body('ChannelBalance', 'ChannelBalance', Body, ValidatorState);
+    validate_response_body('ChannelBalanceResult', 'ChannelBalanceResult', Body, ValidatorState);
+validate_response('ChannelBalance', 405, Body, ValidatorState) ->
+    validate_response_body('', '', Body, ValidatorState);
 
 validate_response('ChannelSoloClose', 405, Body, ValidatorState) ->
     validate_response_body('', '', Body, ValidatorState);

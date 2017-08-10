@@ -201,13 +201,14 @@ class IntAPI(API):
         r = self.session.post(uri, json=data)
         return r.status_code
 
-    def channel_balance(self):
+    def channel_balance(self, pubkey):
         uri = self.URL + '/channel-balance'
-        r = self.session.get(uri)
+        data = {'pubkey': pubkey}
+        r = self.session.post(uri, json=data)
         code = r.status_code
         if code != 200:
             return code, None
-        return code, r.json()['balance']
+        return code, r.json()
 
     def channel_solo_close(self):
         uri = self.URL + '/channel-solo-close'

@@ -76,12 +76,24 @@ class InternalAPITest(SwaggerTest):
         self.c(api.fetch_account(pub2))
         # XXX check pub2's balance?
 
-    # todo: fix api:integer_channel_balance/0
-    @nottest
     def test_channel_balance(self):
-        api = self.API['dev1']
-        balance = self.c(api.channel_balance())
-        self.assertIsNotNone(balance)
+        api1 = self.API['dev1']
+        api2 = self.API['dev2']
+
+        # grab dev1's pubkey
+        pub1 = self.c(api1.fetch_pubkey())
+        # sync dev1 with dev2
+        self.c(api1.sync('127.0.0.1', 3020)); sleep(0.5)
+        # set keys on dev2
+        pub2, priv2 = self.c(api2.create_keypair())
+        self.c(api2.set_keypair(pub2, priv2))
+        # let dev1 know about dev2
+        self.c(api1.create_account_with_key(pub2, 10)); sleep(0.5)
+        # create channel
+        self.c(api1.new_channel_with_server('127.0.0.1', 3020, 1, 10000, 10001, 50, 4)); sleep(0.1)
+        # ask channel balance
+        balance = self.c(api1.channel_balance(pub2))
+        self.assertEqual(10000, balance)
 
     @nottest
     def test_channel_solo_close(self):
