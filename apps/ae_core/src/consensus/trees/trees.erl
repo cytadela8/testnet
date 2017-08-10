@@ -1,4 +1,5 @@
 -module(trees).
+
 -export([accounts/1,channels/1,existence/1,burn/1,
 	 oracles/1,new/6,update_accounts/2,
 	 update_channels/2,update_existence/2,
@@ -6,8 +7,14 @@
 	 update_governance/2, governance/1,
 	 root_hash/1, name/1, garbage/0,
 	 hash2int/1]).
+
+-export_type([trees/0]).
+
 -record(trees, {accounts, channels, existence,
 		burn, oracles, governance}).
+
+-opaque trees() :: #trees{}.
+
 name(<<"accounts">>) -> accounts;
 name("channels") -> channels;
 name("existence") -> existence;

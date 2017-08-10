@@ -14,11 +14,15 @@ sync_all([Peer|T], Height) ->
 
 
 sync(Peer, MyHeight) ->
-    RemoteTop = remote_peer({top}, Peer),
-	do_sync(RemoteTop, MyHeight, Peer).
+    case remote_peer({top}, Peer) of
+        {ok, SerializedTopBlock, Height} ->
+            TopBlock = block:deserialize(SerializedTopBlock),
+            RemoteTop = {ok, TopBlock, Height},
+            do_sync(RemoteTop, MyHeight, Peer);
+        {error} ->
+            ok
+    end.
 
-do_sync(error, _, _) ->
-    ok;
 do_sync({ok, TopBlock, Height} = _RemoteTopResult, MyHeight, Peer) ->
     {ok, DBB} = application:get_env(ae_core, download_blocks_batch),
     JumpHeight = MyHeight + DBB,
@@ -26,7 +30,7 @@ do_sync({ok, TopBlock, Height} = _RemoteTopResult, MyHeight, Peer) ->
         JumpHeight < Height ->
             lager:debug("JumpHeight < Height"),
 	    true = JumpHeight > 0,
-            BlockAtJumpHeight = remote_peer({block, JumpHeight}, Peer),
+            BlockAtJumpHeight = block:deserialize(remote_peer({block, JumpHeight}, Peer)),
             trade_blocks(Peer, [BlockAtJumpHeight], JumpHeight);
         true ->
             trade_blocks(Peer, [TopBlock], Height)
@@ -50,7 +54,7 @@ trade_blocks(Peer, [PrevBlock|PBT] = CurrentBlocks, Height) ->
         empty ->
     	    lager:debug("we don't have a parent for this block ~p", [OurChainAtPrevHash]),
 	    true = Height > 1,
-            RemoteBlockThatWeMiss = remote_peer({block, Height-1}, Peer),
+            RemoteBlockThatWeMiss = block:deserialize(remote_peer({block, Height-1}, Peer)),
     	    lager:debug("trade_blocks: height > 1 ~p", [packer:pack({got_block, RemoteBlockThatWeMiss})]),
             trade_blocks(Peer, [RemoteBlockThatWeMiss|CurrentBlocks], Height-1);
         _ ->
@@ -85,7 +89,7 @@ send_blocks_external(Peer, Blocks) ->
 
 do_send_blocks(_, []) -> ok;
 do_send_blocks(Peer, [Block|T]) ->
-    remote_peer({give_block, Block}, Peer),
+    remote_peer({give_block, block:serialize(Block)}, Peer),
     timer:sleep(20),
     do_send_blocks(Peer, T).
 
