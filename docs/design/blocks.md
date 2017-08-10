@@ -27,10 +27,10 @@ The block includes:
   ```erlang
   #block.txs
   ```
-* Partial representation of state Merkle trees (e.g. accounts,
-  channels) before application of transactions, specifically proof and
-  datum of each leaf affected by at least one transaction in the
-  block.
+* Partial representation of state Merkle trees (i.e. accounts,
+  channels, proof of existence, proof of burn and oracles) before
+  application of transactions, specifically proof and datum of each
+  leaf affected by at least one transaction in the block.
   ```erlang
   #block.proofs
   ```
@@ -65,12 +65,14 @@ The block header includes:
   #block.version
   ```
 * Hash summarizing partial representation of state Merkle trees before
-  application of transactions (in block) and transactions (in block);
+  application of transactions (in block - `#block.proofs`), and
+  transactions (in block - `#block.txs`);
   ```erlang
   #header.txs_proof_hash
   ```
-* Hash summarizing all state Merkle trees (e.g. accounts, channels) as
-  after application of transactions;
+* Hash summarizing all state Merkle trees (i.e. accounts, channels,
+  proof of existence, proof of burn and oracles) as after application
+  of transactions;
   ```erlang
   #header.trees_hash
   #block.trees_hash
@@ -134,3 +136,5 @@ Decide whether to include `#header.accumulative_difficulty` in this description.
 Decide whether to include `#block.comment` in this description.
 
 Confirm exclusion of `#block.prev_hashes` from this description.
+
+Clarify why governance tree is not considered for computation of hash `#header.trees_hash`.

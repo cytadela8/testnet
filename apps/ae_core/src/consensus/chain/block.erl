@@ -12,15 +12,15 @@
 
 -record(block, {height :: headers:height(),
                 prev_hash :: headers:block_header_hash(),
-                trees_hash,
+                trees_hash :: headers:trees_hash(), %% Hash of state after application of txs in block.
                 time,
                 difficulty,
                 version,
                 nonce = 0,
-                trees :: trees:trees(),
+                trees :: trees:trees(), %% State after application of txs in block.
                 txs,
                 prev_hashes = {prev_hashes},
-                proofs = [],
+                proofs = [], %% Proofs of portions of state before application of txs in block.
                 comment = <<>>}).
 
 %proofs is for this

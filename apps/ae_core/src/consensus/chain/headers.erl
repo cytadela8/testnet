@@ -21,7 +21,7 @@
 
 -record(header, {height :: height(),
                  prev_hash :: block_header_hash(),
-                 trees_hash,
+                 trees_hash :: trees_hash(), %% Hash of state after application of txs in block.
                  txs_proof_hash,
                  time,
                  difficulty,
@@ -33,6 +33,7 @@
 
 -type height() :: non_neg_integer().
 -type block_header_hash() :: binary().
+-type trees_hash() :: trees:hash().
 -opaque header() :: #header{}.
 -type serialized_header() :: binary().
 

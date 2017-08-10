@@ -8,12 +8,14 @@
 	 root_hash/1, name/1, garbage/0,
 	 hash2int/1]).
 
--export_type([trees/0]).
+-export_type([trees/0, hash/0]).
 
 -record(trees, {accounts, channels, existence,
 		burn, oracles, governance}).
 
 -opaque trees() :: #trees{}.
+-type hash() :: nonempty_binary(). %% non-empty because constants:hash_size() positive.
+-type nonempty_binary() :: <<_:8, _:_*8>>.
 
 name(<<"accounts">>) -> accounts;
 name("channels") -> channels;
@@ -43,6 +45,8 @@ update_burn(X, E) ->
     X#trees{burn = E}.
 update_oracles(X, A) ->
     X#trees{oracles = A}.
+
+-spec root_hash(trees()) -> hash().
 root_hash(Trees) ->
     A = accounts:root_hash(trees:accounts(Trees)),
     C = channels:root_hash(trees:channels(Trees)),
