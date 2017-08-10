@@ -31,6 +31,8 @@ This tree stores channels by an integer channel id.
 
 This tree stores accounts by integer id. Each account has 2 merkel roots written in them. One is for a shares tree, the other is for an oracle bets tree.
 
+You can read more about accounts [here](/docs/design/accounts.md).
+
 ### Oracle bets
 
 Each account has a tree of oracle bets. Oracle bets are not transferable. Once an oracle is settled, the bets in it can be converted to shares.
