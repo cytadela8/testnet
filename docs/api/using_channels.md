@@ -10,9 +10,9 @@ This is the maximum amount of money that can be sent to you until the channel ru
 Fee is the transaction fee, so that this transaction will be included into a block soon.
 
 
-checking your balance in the channel:
+checking your balance in the channel to a participant with public key `PubKey`:
 ```
-api:channel_balance().
+api:channel_balance(PubKey).
 ```
 
 
