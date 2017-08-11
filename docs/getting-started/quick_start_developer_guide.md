@@ -10,6 +10,8 @@ Transactions are how you can modify the consensus state of the blockchain.
 [This will teach you about trees](/docs/design/trees.md)
 Trees are the data structures that hold the consensus state of the blockchain.
 
+[This will teach you about blocks](/docs/design/blocks.md)
+
 
 [guide to contributing](/docs/contributions.md)
 
