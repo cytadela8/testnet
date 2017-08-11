@@ -5,7 +5,8 @@
 
 %% API
 -export([
-         push_start/1  %%starts whole process, takes one Block
+         push_start/1,  %%starts whole process, takes one Block
+         list_tasks/0  %%returns supervisor:which_children(?MODULE). Id is BlockHash.
 ]).
 
 start_link() -> supervisor:start_link({local, ?MODULE}, ?MODULE, ok).
@@ -21,3 +22,6 @@ push_start(Block) ->
                                     shutdown => 1000,
                                     type => worker,
                                     modules => [push_block_worker]}).
+
+list_tasks() ->
+    supervisor:which_children(?MODULE).
