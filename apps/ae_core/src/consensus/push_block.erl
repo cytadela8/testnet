@@ -16,8 +16,9 @@ init(ok) ->
 push_start(Block) ->
     lager:debug("Starting gossip"),
     BlockHash = block:hash(Block),
+    BlockSerialized = block:serialize(Block),
     supervisor:start_child(?MODULE, #{id => BlockHash,
-                                    start => {push_block_worker, start_link, [BlockHash, Block]},
+                                    start => {push_block_worker, start_link, [BlockHash, BlockSerialized]},
                                     restart => temporary,
                                     shutdown => 1000,
                                     type => worker,

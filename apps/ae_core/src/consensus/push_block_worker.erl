@@ -9,20 +9,20 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 -record(state, {num_left,  %%number of "known" responses left to shutdown
-                block,
+                blockserialized,
                 peers}).
 
 %%%===================================================================
 %%% API functions
 %%%===================================================================
-start_link(Name, Block) ->
-    Resp = {ok, Pid} = gen_server:start_link({global, {?MODULE, Name}} ,?MODULE, [Block], []),
+start_link(Name, BlockSerialized) ->
+    Resp = {ok, Pid} = gen_server:start_link({global, {?MODULE, Name}} ,?MODULE, [BlockSerialized], []),
     push(Pid, gossip_process_count()),
     Resp.
 
-init([Block]) ->
+init([BlockSerialized]) ->
     {ok, #state{num_left=gossip_stop_count(),
-                block=Block,
+                blockserialized=BlockSerialized,
                 peers=shuffle(peers:all())}}.
 
 handle_call(status, _From, X) -> {reply, X, X};
@@ -48,7 +48,7 @@ handle_cast(push, State) ->  %Starts new process that sends the block to one pee
     Pid = self(),
     spawn(fun() ->
         lager:debug("Gossiping to peer ~p", [Peer]),
-        Resp = talker:talk({give_new_block, State#state.block}, Peer),
+        Resp = talker:talk({give_new_block, State#state.blockserialized}, Peer),
         case Resp of
             {known} ->
                 lager:debug("got known\n"),
