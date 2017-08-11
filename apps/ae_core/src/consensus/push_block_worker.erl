@@ -2,7 +2,7 @@
 -module(push_block_worker).
 -behaviour(gen_server).
 %% API
--export([start_link/1,  %Start push process. To be called from supervisor
+-export([start_link/2,  %Start push process. To be called from supervisor
          status/1,
          stop/1]).
 %% gen_server callbacks
@@ -15,9 +15,9 @@
 %%%===================================================================
 %%% API functions
 %%%===================================================================
-start_link(Block) ->
+start_link(Name, Block) ->
     lager:debug("asd"),
-    Resp = {ok, Pid} = gen_server:start_link(?MODULE, [Block], []),
+    Resp = {ok, Pid} = gen_server:start_link({global, {?MODULE, Name}} ,?MODULE, [Block], []),
     lager:debug("sdf"),
     push(Pid, gossip_process_count()),
     Resp.
@@ -85,7 +85,7 @@ push(Pid, N) ->
 push(Pid) ->
     gen_server:cast(Pid, push).
 
-stop(Pid) -> gen_server:call(Pid, stop).
+stop(Name) -> gen_server:call({global, {?MODULE, Name}}, stop).
 
 gossip_stop_count() ->  %Number of consequent "known" responses to shutdown.
     {ok, N} = application:get_env(ae_core, push_block_gossip_stop_count),
@@ -96,9 +96,8 @@ gossip_process_count() ->  %Number of concurrent push requests.
     lager:info("Process count ~p", [N]),
     N.
 
-
 status(Name) ->
-    gen_server:call(Name, status).
+    gen_server:call({global, {?MODULE, Name}}, status).
 
 shuffle(L) ->
     [X||{_,X} <- lists:sort([ {rand:uniform(), N} || N <- L])].
