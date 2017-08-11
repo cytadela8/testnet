@@ -2,13 +2,13 @@
 -module(push_block_worker).
 -behaviour(gen_server).
 %% API
--export([start_link/2,  %Start push process. To be called from supervisor
+-export([start_link/2,  %%Start push process. To be called from supervisor
          status/1,
          stop/1]).
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
--record(state, {num_left,  %number of "known" responses left to shutdown
+-record(state, {num_left,  %%number of "known" responses left to shutdown
                 block,
                 peers}).
 
@@ -16,14 +16,11 @@
 %%% API functions
 %%%===================================================================
 start_link(Name, Block) ->
-    lager:debug("asd"),
     Resp = {ok, Pid} = gen_server:start_link({global, {?MODULE, Name}} ,?MODULE, [Block], []),
-    lager:debug("sdf"),
     push(Pid, gossip_process_count()),
     Resp.
 
 init([Block]) ->
-    lager:debug("qwe ~p, ~p", [gossip_stop_count(), shuffle(peers:all())]),
     {ok, #state{num_left=gossip_stop_count(),
                 block=Block,
                 peers=shuffle(peers:all())}}.
@@ -41,12 +38,12 @@ handle_cast(_, State=#state{num_left=0}) ->
 handle_cast(known, State=#state{num_left=1}) ->
     lager:info("Gossip finished reason: known limit"),
     {stop, normal, State};
-handle_cast(known, State) ->
+handle_cast(known, State) ->  %invoked when a peer responses with known
     {noreply, State#state{num_left = State#state.num_left - 1}};
-handle_cast(unknown, State) ->
+handle_cast(unknown, State) ->  %invoked when a peer responses with unknown or any problem occures
     push(self(), gossip_stop_count() - State#state.num_left + 1),
     {noreply, State#state{num_left = gossip_stop_count()}};
-handle_cast(push, State) ->
+handle_cast(push, State) ->  %Starts new process that sends the block to one peer
     [Peer | RemainingPeers] = State#state.peers,
     Pid = self(),
     spawn(fun() ->
@@ -79,13 +76,13 @@ code_change(_OldVsn, State, _Extra) ->
 push(_, 0) ->
     ok;
 push(Pid, N) ->
-    lager:debug("Spawning ~p process of push ~p", [N, Pid]),
     push(Pid),
     push(Pid, N-1).
 push(Pid) ->
     gen_server:cast(Pid, push).
 
-stop(Name) -> gen_server:call({global, {?MODULE, Name}}, stop).
+stop(Name) ->
+    gen_server:call({global, {?MODULE, Name}}, stop).
 
 gossip_stop_count() ->  %Number of consequent "known" responses to shutdown.
     {ok, N} = application:get_env(ae_core, push_block_gossip_stop_count),
@@ -93,7 +90,6 @@ gossip_stop_count() ->  %Number of consequent "known" responses to shutdown.
 
 gossip_process_count() ->  %Number of concurrent push requests.
     {ok, N} = application:get_env(ae_core, push_block_gossip_process_count),
-    lager:info("Process count ~p", [N]),
     N.
 
 status(Name) ->
