@@ -6,7 +6,7 @@
 
 %% API
 -export([
-         add/1, %Add a Peer 
+         add/1, %Add a Peer
          remove/1, %Remove a Peer
          all/0, %Get list of all Peers
          read/1, %Get properties of Peer
@@ -55,12 +55,12 @@ add([]) -> ok;
 add([[IP, Port]|T]) when ((size(IP) == 4) or (size(IP) == 16)) ->
     add({IP, Port}),
     add(T);
-add([{IP, Port}|T]) -> 
+add([{IP, Port}|T]) ->
     add([[IP, Port]|T]);
 add([MalformedPeer|T]) ->
     lager:warning("Tried to add malformed peer:~p. Skipping...", [MalformedPeer]),
     add(T);
-add({IP, Port}) -> 
+add({IP, Port}) ->
     NIP = if
               is_tuple(IP) -> IP;
               is_list(IP) -> list_to_tuple(IP)
