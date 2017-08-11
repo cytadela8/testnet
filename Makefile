@@ -83,6 +83,11 @@ multi-clean:
 	@make clean2
 	@make clean3
 
+multi-restart: killall
+	make multi-build
+	make multi-clean
+	make multi-go
+
 build1: KIND=dev1
 build1: build
 
