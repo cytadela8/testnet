@@ -185,6 +185,8 @@ config/local/sys.config: config/sys.config.tmpl
 	{keys_priv, <<\"laPlc2mJq5PM9AjIABaGHKpT/miiL0MNhm7puUh89JI=\">>},\
 	{keys_pub, <<\"BIVZhs16gtoQ/uUMujl5aSutpImC4va8MewgCveh6MEuDjoDvtQqYZ5FeYcUhY/QLjpCBrXjqvTtFiN4li0Nhjo=\">>},\
 	{keys_pass, \"\"},\
+	{push_block_gossip_stop_count, 1},\
+	{push_block_gossip_process_count, 1},\
 	:\
 	" $< > $@
 
@@ -197,6 +199,8 @@ config/prod/sys.config: config/sys.config.tmpl
     {swagger_port_external, 8043},\
     {peers, [[{46,101,103,165}, 8080]]},\
     {master_pub, <<\"BO8I1h5yIliI8XPCT89TMTqWvsmZ0J0D13cwF8UZ9YrL2oIdKZUAVg2L100okp1wtYCecxPC8kyPigBMC/lvg1Y=\">>},\
+    {push_block_gossip_stop_count, 7},\
+    {push_block_gossip_process_count, 5},\
     {test_mode,false},\
     :\
     " $< > $@
